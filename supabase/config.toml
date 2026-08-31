@@ -1,0 +1,4 @@
+project_id = "jcehdwcydtrppewrgilh"
+
+[functions.shelby]
+verify_jwt = true
