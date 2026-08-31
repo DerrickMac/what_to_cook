@@ -91,19 +91,27 @@ export function PantryItem() {
           onClick={() => setPhotoOpen(true)}
           aria-label={`View full-size photo of ${item.name}`}
           style={{
-            display: 'block',
-            width: '100%',
+            display: 'inline-block',
             padding: 0,
             border: 'none',
             background: 'none',
             cursor: 'zoom-in',
             marginBottom: 18,
+            lineHeight: 0,
           }}
         >
           <img
             src={item.imageUrl}
             alt=""
-            style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 16, display: 'block' }}
+            style={{
+              maxWidth: 200,
+              maxHeight: 220,
+              width: 'auto',
+              height: 'auto',
+              borderRadius: 14,
+              border: '1px solid var(--line)',
+              display: 'block',
+            }}
           />
         </button>
       )}
