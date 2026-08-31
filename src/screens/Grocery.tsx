@@ -59,8 +59,9 @@ export function Grocery() {
 
       {groups.map((g) => (
         <section key={g.name} style={{ marginBottom: 22 }}>
-          <div className="eyebrow" style={{ marginBottom: 9 }}>
-            {g.name}
+          <div className="group-head">
+            <span className="eyebrow">{g.name}</span>
+            <span className="group-count">{g.count}</span>
           </div>
 
           <div className="list-container">
@@ -71,52 +72,23 @@ export function Grocery() {
                   key={item.id}
                   style={{
                     display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 12,
-                    padding: '14px 16px',
+                    alignItems: 'center',
                     borderTop: i === 0 ? 'none' : '1px solid var(--line-soft)',
                   }}
                 >
                   <button
-                    className="row-button"
-                    style={{ flex: 1, minWidth: 0, gap: 12, alignItems: 'flex-start', padding: 0 }}
+                    className="check-row"
+                    style={{ flex: 1, minWidth: 0 }}
+                    role="checkbox"
+                    aria-checked={item.checked}
                     onClick={() => toggleGroceryRow(item)}
-                    aria-pressed={item.checked}
                   >
-                    <span
-                      style={{
-                        width: 21,
-                        height: 21,
-                        borderRadius: 6,
-                        flex: 'none',
-                        marginTop: 1,
-                        background: item.checked ? 'var(--olive)' : 'transparent',
-                        border: `1px solid ${item.checked ? 'var(--olive)' : '#D2C6B8'}`,
-                        color: '#fff',
-                        fontSize: 12,
-                        lineHeight: '20px',
-                        textAlign: 'center',
-                      }}
-                      aria-hidden="true"
-                    >
-                      {item.checked ? '✓' : ''}
-                    </span>
+                    <span className="checkbox" aria-hidden="true" />
 
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: 15.5,
-                          color: item.checked ? '#A99C91' : 'var(--ink)',
-                          textDecoration: item.checked ? 'line-through' : 'none',
-                        }}
-                      >
-                        {item.name}
-                      </span>
+                    <span className="check-body">
+                      <span className="check-name">{item.name}</span>
                       {(from || item.qty) && (
-                        <span
-                          style={{ display: 'block', fontSize: 12, color: 'var(--muted-3)', marginTop: 3 }}
-                        >
+                        <span className="check-source">
                           {[item.qty, from?.title].filter(Boolean).join(' · ')}
                         </span>
                       )}
@@ -125,7 +97,7 @@ export function Grocery() {
 
                   <button
                     className="icon-round"
-                    style={{ flex: 'none', width: 26, height: 26, fontSize: 14 }}
+                    style={{ flex: 'none', width: 26, height: 26, fontSize: 14, marginRight: 16 }}
                     onClick={() => deleteGroceryRow(item)}
                     aria-label={`Remove ${item.name}`}
                   >

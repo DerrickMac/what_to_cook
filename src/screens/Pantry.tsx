@@ -87,16 +87,9 @@ export function Pantry() {
       ) : (
         groups.map((g) => (
           <section key={g.name} style={{ marginBottom: 22 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-                marginBottom: 9,
-              }}
-            >
+            <div className="group-head">
               <span className="eyebrow">{g.name}</span>
-              <span style={{ fontSize: 12, color: 'var(--muted-3)' }}>{g.count}</span>
+              <span className="group-count">{g.count}</span>
             </div>
 
             <div className="list-container">
@@ -131,8 +124,8 @@ export function Pantry() {
                       }}
                     >
                       <span
-                        className="dot"
-                        style={{ width: 8, height: 8, background: statusColor(item.status) }}
+                        className={`dot dot-${item.status}`}
+                        style={{ width: 8, height: 8 }}
                       />
                     </span>
                   )}

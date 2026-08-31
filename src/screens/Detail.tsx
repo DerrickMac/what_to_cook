@@ -174,20 +174,7 @@ export function Detail() {
                       <span style={{ fontSize: 13.5, color: 'var(--muted-2)', flex: 'none', minWidth: 62 }}>
                         {item.q}
                       </span>
-                      <button
-                        onClick={() => openDetail(item.link!)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 7,
-                          background: 'var(--link-chip-bg)',
-                          border: '1px solid var(--link-chip-border)',
-                          color: 'var(--link-chip-ink)',
-                          borderRadius: 20,
-                          padding: '7px 12px',
-                          fontSize: 14,
-                        }}
-                      >
+                      <button className="link-chip" onClick={() => openDetail(item.link!)}>
                         <span className="dot" style={{ width: 7, height: 7, background: 'var(--olive)' }} />
                         {item.n}
                         <span aria-hidden="true">↗</span>
@@ -279,18 +266,10 @@ export function Detail() {
               Directions
             </div>
             {recipe.steps.map((text, i) => (
-              <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-                <span
-                  className="serif"
-                  style={{ width: 26, flex: 'none', fontSize: 24, lineHeight: 1, color: 'var(--terracotta)' }}
-                >
-                  {i + 1}
-                </span>
+              <div key={i} className="step">
+                <span className="step-num">{i + 1}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p
-                    className="prose"
-                    style={{ margin: 0, fontSize: 15.5, lineHeight: 1.5, color: 'var(--ink-2)' }}
-                  >
+                  <p className="step-body prose" style={{ margin: 0 }}>
                     {text}
                   </p>
                   <StepTimers
