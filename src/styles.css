@@ -1,19 +1,87 @@
 /* ============================================================
-   What To Cook — tactile pass
-   Extends the ingredient-nub vocabulary to the rest of the app.
+   What To Cook — styles.css (tactile pass, unified)
 
-   One rule governs everything below:
-     PRESSABLE things are raised (top highlight, bottom shade, 1px cast).
-     TYPEABLE things are sunk (inner top shadow).
-     LABELS and CARDS stay flat paper — no bevel, or the page turns to jelly.
+   ONE depth rule governs the whole app. Learn these three and
+   every screen falls out of it:
 
-   Drop this in after styles.css, or fold the blocks into their
-   existing counterparts. No new colour tokens; adds three
-   shadow tokens only.
+     RAISED  — you can press it.   Buttons, pills, nubs, checkbox,
+               FAB, tab-bar slab, swap/edit controls.
+               top highlight + bottom shade + 1px cast.
+     SUNK    — it receives or holds something. Inputs, image
+               wells, tag chips, empty plan slots, selected
+               filters, the active tab, a checked grocery row.
+               inner top shadow, no cast.
+     FLAT    — you only read it. Cards, list containers, status
+               pills, section heads, metadata.
+
+   Corollary used everywhere: a state the USER chose stays visibly
+   held down (selected chip, active tab, filled slot, checked item).
+   Nothing is raised unless it can be pressed — that is what keeps
+   Recipes, Fridge, Plan and List reading as one app.
+
+   No new colour tokens. Bevels are five shadow primitives, reused.
    ============================================================ */
 
 :root {
-  /* Bevel primitives — reused by every pressable surface */
+  /* Surfaces */
+  --paper: #fbf7f0;
+  --paper-sunk: #f4ede2;
+  --paper-warm: #f7f1e7;
+  --surface: #ffffff;
+
+  /* Ink */
+  --ink: #2b2320;
+  --ink-2: #3d332d;
+  --ink-3: #4a3e37;
+  --muted: #6b5e56;
+  --muted-2: #8a7c71;
+  --muted-3: #a2968c;
+  --muted-4: #b8aba0;
+
+  /* Lines */
+  --line: #e8dfd2;
+  --line-soft: #f4ede2;
+  --line-soft-2: #f1e9dc;
+  --line-soft-3: #f7f1e7;
+  --line-dash: #d9cdbb;
+  --line-dash-2: #dfd4c4;
+  --line-filled-slot: #ede3d5;
+
+  /* Accents */
+  --terracotta: #c0603e;
+  --terracotta-dark: #9e4b2e;
+  --olive: #6b7a3f;
+  --saffron: #d89b2c;
+  --clay: #8a6f3f;
+  --danger: #b3453a;
+
+  /* Status tints */
+  --tint-have: #f1f2e6;
+  --tint-low: #fbf0dc;
+  --tint-out: #fbeadd;
+
+  /* Linked-recipe chip */
+  --link-chip-bg: #f1f2e6;
+  --link-chip-border: #dcdfc6;
+  --link-chip-ink: #4f5a28;
+
+  /* Washes */
+  --shelby-wash: linear-gradient(180deg, #fdf3ea 0%, #fbeadd 100%);
+  --shelby-wash-border: #e4cfc0;
+  --sequence-wash: linear-gradient(180deg, #fdf6ee 0%, #fbf1e6 100%);
+  --sequence-wash-border: #eaddcb;
+  --today-wash: #fdf6ee;
+  --today-wash-border: #eaddcb;
+
+  /* Scrims + drop shadows */
+  --scrim-sheet: rgba(43, 35, 32, 0.42);
+  --scrim-dialog: rgba(43, 35, 32, 0.46);
+  --shadow-card: 0 1px 2px rgba(60, 40, 25, 0.03);
+  --shadow-tabbar: 0 8px 24px -10px rgba(60, 40, 25, 0.22);
+  --shadow-fab: 0 10px 24px -8px rgba(150, 70, 40, 0.6);
+  --shadow-toast: 0 14px 30px -12px rgba(30, 20, 15, 0.7);
+
+  /* ---- Bevel primitives: the whole tactile system ---- */
   --bevel-raised:
     inset 0 1px 0 #fff,
     inset 0 -1px 0 rgba(42, 35, 32, 0.05),
@@ -22,21 +90,295 @@
   --bevel-sunk:
     inset 0 2px 3px rgba(42, 35, 32, 0.07),
     inset 0 1px 0 rgba(42, 35, 32, 0.04);
+  --bevel-sunk-deep:
+    inset 0 2px 5px rgba(42, 35, 32, 0.1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+  --bevel-flat: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --fill-paper-lit: linear-gradient(180deg, rgba(255, 255, 255, 0.85), var(--paper) 70%);
+  --fill-ink: linear-gradient(180deg, #3a302b 0%, var(--ink) 70%);
+  --fill-terracotta: linear-gradient(180deg, #cd6f4c 0%, var(--terracotta) 62%, #b4573a 100%);
   --press: transform 0.12s ease, box-shadow 0.12s ease,
-    background-color 0.16s ease, border-color 0.16s ease;
+    background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+
+  /* Type */
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Safe areas */
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ---------------- Buttons ---------------- */
+/* ---------------- Reset ---------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--terracotta);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--terracotta-dark);
+}
+
+:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ---------------- Motion ---------------- */
+
+@keyframes wtc-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes wtc-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes wtc-sheet {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@keyframes wtc-menu-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.rise { animation: wtc-rise 0.28s ease both; }
+.rise-seq { animation: wtc-rise 0.32s ease both; }
+.rise-fast { animation: wtc-rise 0.2s ease both; }
+.rise-toast { animation: wtc-rise 0.22s ease both; }
+.sheet-in { animation: wtc-sheet 0.26s ease both; }
+.breathe { animation: wtc-breathe 3.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------- Shell ---------------- */
+
+.app {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-top: var(--sa-top);
+  scrollbar-width: none;
+}
+
+.scroll::-webkit-scrollbar,
+.no-bar::-webkit-scrollbar,
+.chip-rail::-webkit-scrollbar,
+.sheet-body::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.no-bar { scrollbar-width: none; }
+
+/* Screen gutter is 20px; bottom padding clears the tab bar. */
+.screen {
+  padding: 8px 20px 130px;
+}
+
+/* Every tab opens the same way: eyebrow / serif title / controls
+   on the right. Keeping this one block is most of the coherence. */
+.screen-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0 6px;
+}
+
+.screen-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.screen-note {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 6px 0 16px;
+  text-wrap: pretty;
+}
+
+/* ---------------- Type ---------------- */
+
+.serif {
+  font-family: var(--serif);
+  font-weight: 400;
+}
+
+.screen-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--ink);
+  margin: 0;
+}
+
+.eyebrow {
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+}
+
+.prose { text-wrap: pretty; }
+
+/* Group header above every list container — Fridge categories,
+   grocery aisles, ingredient sections. Same rhythm in all three. */
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px 8px;
+}
+
+.group-count {
+  font-size: 12px;
+  color: var(--muted-3);
+}
+
+.section { margin-bottom: 22px; }
+
+/* ---------------- FLAT: cards, containers, rows ---------------- */
+
+/* Paper documents, not buttons: a hairline top highlight only, so
+   they sit ON the page instead of hovering above it. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--bevel-flat), var(--shadow-card);
+}
+
+.list-container {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--bevel-flat), var(--shadow-card);
+}
+
+/* Inner divider for rows inside a container. */
+.list-container > * + * {
+  border-top: 1px solid var(--line-soft);
+}
+
+/* A whole row that is tappable takes press feedback but NO bevel:
+   the row is the target, the nub inside it is the control. */
+.row-button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 14px 16px;
+  min-height: 56px;
+  transition: background-color 0.14s ease;
+}
+
+.row-button:active {
+  background: color-mix(in srgb, var(--paper-sunk) 70%, transparent);
+}
+
+.row-title {
+  font-size: 15.5px;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.row-sub {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin-top: 2px;
+}
+
+.row-meta {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--muted-2);
+  flex: none;
+}
+
+/* ---------------- RAISED: buttons ---------------- */
 
 .btn {
+  border-radius: 12px;
+  border: none;
+  font-size: 15.5px;
+  font-weight: 500;
+  padding: 15px;
+  width: 100%;
   transition: var(--press);
 }
 
-/* Solid accents keep their colour; the bevel is light-on-top,
-   shade-on-bottom inside the fill, plus a coloured cast. */
 .btn-primary {
-  background: linear-gradient(180deg, #cd6f4c 0%, var(--terracotta) 62%, #b4573a 100%);
+  color: #fff;
+  background: var(--fill-terracotta);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -1px 0 rgba(0, 0, 0, 0.14),
@@ -49,7 +391,8 @@
 }
 
 .btn-dark {
-  background: linear-gradient(180deg, #3a302b 0%, var(--ink) 70%);
+  color: var(--paper);
+  background: var(--fill-ink);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -1px 0 rgba(0, 0, 0, 0.25),
@@ -60,36 +403,50 @@
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
-/* The outline button becomes the nub, full width. */
+/* The outline button is the ingredient nub, full width. */
 .btn-outline {
   color: var(--ink-3);
   border: 1px solid var(--line);
   background: var(--fill-paper-lit);
   box-shadow: var(--bevel-raised);
 }
-.btn-outline:hover {
-  border-color: var(--muted-3);
-}
+.btn-outline:hover { border-color: var(--muted-3); }
 .btn-outline:active {
   transform: translateY(1px);
   box-shadow: var(--bevel-pressed);
 }
 
-.btn:disabled {
+.btn-danger {
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 26%, var(--line));
+  background: var(--fill-paper-lit);
+  box-shadow: var(--bevel-raised);
+}
+.btn-danger:active {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-pressed);
+}
+
+.btn:disabled,
+.pill:disabled {
   opacity: 0.45;
   box-shadow: none;
   transform: none;
+  cursor: default;
 }
 
-/* ---------------- Pills, chips, filter rail ---------------- */
+/* ---------------- RAISED: pills and the filter rail ---------------- */
 
 .pill,
 .chip-rail button {
-  transition: var(--press);
+  border-radius: 20px;
+  padding: 8px 13px;
+  font-size: 12.5px;
   border: 1px solid var(--line);
   background: var(--fill-paper-lit);
   color: var(--muted);
   box-shadow: var(--bevel-raised);
+  transition: var(--press);
 }
 .pill:hover,
 .chip-rail button:hover {
@@ -102,45 +459,144 @@
   box-shadow: var(--bevel-pressed);
 }
 
-/* Selected filter reads as pressed IN, not raised — the state
-   the user chose stays visibly held down. */
+.pill-danger { color: var(--danger); }
+
+/* Chosen state = held down. Used by the tag rail and any pill that
+   toggles. Same treatment as the active tab, deliberately. */
 .pill-dark,
 .chip-rail button[aria-pressed="true"],
 .chip-rail button.is-active {
   border-color: transparent;
-  background: linear-gradient(180deg, #3a302b, var(--ink) 70%);
+  background: var(--fill-ink);
   color: var(--paper);
+  font-weight: 500;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset 0 -1px 0 rgba(0, 0, 0, 0.25),
     0 1px 2px rgba(42, 35, 32, 0.18);
 }
 .pill-dark:active,
-.chip-rail button[aria-pressed="true"]:active {
+.chip-rail button[aria-pressed="true"]:active,
+.chip-rail button.is-active:active {
   transform: translateY(1px);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.38);
 }
 
-/* Tag chips are LABELS, not controls — they stay flat and sunk
-   into the paper so they never compete with the filter rail. */
-.tag-chip {
-  background: var(--paper-sunk);
-  box-shadow: inset 0 1px 0 rgba(42, 35, 32, 0.03);
+.chip-rail {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.chip-rail button {
+  flex: none;
+  white-space: nowrap;
 }
 
-/* ---------------- Inputs: sunk, the inverse of the nub ------ */
+/* ---------------- SUNK: tag chips (labels, never controls) ------- */
+
+.tag-chip {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  background: var(--paper-sunk);
+  border-radius: 20px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 1px rgba(42, 35, 32, 0.06);
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Removable chip in the recipe editor: label + × control. */
+.tag-chip-removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  padding: 5px 6px 5px 10px;
+}
+.tag-chip-removable button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--fill-paper-lit);
+  box-shadow: var(--bevel-raised);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: var(--press);
+}
+.tag-chip-removable button:active {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-pressed);
+}
+
+/* Dashed "+ tag" suggestion — an empty slot you can fill. */
+.tag-add {
+  border: 1px dashed var(--line-dash);
+  background: none;
+  box-shadow: none;
+  color: var(--muted-2);
+}
+.tag-add:hover {
+  border-style: dashed;
+  border-color: var(--muted-3);
+  background: var(--paper-sunk);
+}
+
+/* Linked recipe used as an ingredient. */
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: var(--link-chip-bg);
+  border: 1px solid var(--link-chip-border);
+  color: var(--link-chip-ink);
+  box-shadow: var(--bevel-raised);
+  transition: var(--press);
+}
+.link-chip:active {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-pressed);
+}
+
+/* ---------------- SUNK: inputs ---------------- */
 
 .input,
 .textarea {
+  width: 100%;
+  border: 1px solid var(--line-dash-2);
   background: var(--paper-sunk);
-  border-color: var(--line-dash-2);
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
   box-shadow: var(--bevel-sunk);
   transition: box-shadow 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
 }
-.input-surface {
-  background: var(--surface);
-  box-shadow: var(--bevel-sunk);
+
+.textarea {
+  line-height: 1.5;
+  resize: vertical;
 }
+
+.input-surface { background: var(--surface); }
+
+.input::placeholder,
+.textarea::placeholder { color: var(--muted-3); }
+
 .input:focus,
 .textarea:focus {
   background: var(--surface);
@@ -150,10 +606,56 @@
     0 0 0 3px color-mix(in srgb, var(--terracotta) 14%, transparent);
 }
 
-/* ---------------- Round icon buttons ---------------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.input-serif {
+  font-family: var(--serif);
+  font-size: 22px;
+  padding: 12px 14px;
+}
+
+/* Tag box: a sunk well that holds chips plus an inline input. */
+.tag-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-dash-2);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--bevel-sunk);
+}
+.tag-box input {
+  flex: 1;
+  min-width: 110px;
+  border: 0;
+  outline: none;
+  background: none;
+  font-size: 14px;
+  padding: 4px 2px;
+}
+
+/* ---------------- RAISED: round icon buttons ---------------- */
 
 .icon-round {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
   background: var(--fill-paper-lit);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
   box-shadow: var(--bevel-raised);
   transition: var(--press);
 }
@@ -170,12 +672,580 @@
   box-shadow: none;
   transform: none;
 }
+.icon-round-lg {
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+}
 
-/* ---------------- Tab bar ---------------- */
+/* ---------------- SUNK: image wells (circle marks) ---------------- */
 
-/* The bar itself is one raised slab floating over the paper. */
+.mark {
+  background: var(--paper-sunk);
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  box-shadow:
+    inset 0 2px 4px rgba(42, 35, 32, 0.08),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.mark > span {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+  display: block;
+}
+
+/* ============================================================
+   TAB: Recipes (Cookbook)
+   ============================================================ */
+
+.match-note {
+  height: 16px;
+  font-size: 12px;
+  color: var(--muted-3);
+  margin: 8px 0 10px;
+}
+
+.recipe-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.recipe-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 10px 12px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--bevel-flat), var(--shadow-card);
+  transition: var(--press);
+}
+/* A card is a document you can open — it depresses slightly rather
+   than behaving like a raised button. */
+.recipe-card:active {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-pressed);
+}
+.recipe-card .mark {
+  height: 94px;
+  border-radius: 11px;
+}
+.recipe-card-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+/* Badges float over the well: the favourite reads as a physical
+   button, the Shelby mark as a stamped label. */
+.badge-fav {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--fill-paper-lit);
+  box-shadow: var(--bevel-raised);
+  color: var(--terracotta);
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  transition: var(--press);
+}
+.badge-fav:active {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-pressed);
+}
+
+.badge-ai {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--fill-ink);
+  border-radius: 20px;
+  padding: 4px 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(42, 35, 32, 0.2);
+}
+
+/* Recipe detail header well */
+.detail-well {
+  position: relative;
+  height: 178px;
+  background: #f0e6d7;
+  overflow: hidden;
+  box-shadow: inset 0 -2px 4px rgba(42, 35, 32, 0.06);
+}
+.detail-well > span {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+}
+.detail-actions {
+  position: absolute;
+  inset: auto 16px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 12px;
+  padding: 9px 0;
+}
+.step-num {
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1;
+  color: var(--terracotta);
+  width: 26px;
+  flex: none;
+}
+.step-body {
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ============================================================
+   TAB: Fridge & pantry
+   ============================================================ */
+
+.dot {
+  border-radius: 50%;
+  display: block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+}
+.dot-have { background: var(--olive); }
+.dot-low { background: var(--saffron); }
+.dot-out { background: var(--terracotta); }
+
+/* Readouts stay FLAT — a hairline ring, no bevel. If these were
+   raised, nothing raised would mean "press me" any more. */
+.status-pill {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 20px;
+  flex: none;
+  box-shadow: inset 0 0 0 1px rgba(42, 35, 32, 0.05);
+}
+.status-have { background: var(--tint-have); color: var(--olive); }
+.status-low { background: var(--tint-low); color: #a5751a; }
+.status-out { background: var(--tint-out); color: var(--terracotta); }
+
+/* The fridge row IS the control (tap cycles have → low → out), so it
+   presses as a whole and the pill is only the readout. */
+.fridge-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  transition: background-color 0.14s ease;
+}
+.fridge-row:active {
+  background: color-mix(in srgb, var(--paper-sunk) 70%, transparent);
+}
+.fridge-row .row-title { flex: 1; }
+
+/* Three-up stat strip on Today's fridge card. */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.stat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 14px 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.stat + .stat { border-left: 1px solid var(--line-soft); }
+
+/* ── Ingredient status nub (recipe page + anywhere a single row
+   needs its own control instead of the whole row) ──────────── */
+
+.ing-row { position: relative; }
+
+.ing-status {
+  position: relative;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 28px;
+  padding: 0;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: var(--press);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: var(--fill-paper-lit);
+  box-shadow: var(--bevel-raised);
+}
+
+/* 44px touch target without changing layout height */
+.ing-status::after {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
+}
+
+.ing-status::before {
+  content: "•••";
+  font-size: 8px;
+  letter-spacing: 2.5px;
+  text-indent: 2.5px;
+  line-height: 1;
+}
+.ing-status[data-status="have"]::before {
+  content: "✓";
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+.ing-status[data-status="low"]::before {
+  content: "!";
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+.ing-status:hover {
+  border-color: var(--muted);
+  color: var(--ink);
+}
+.ing-status:active,
+.ing-status[aria-expanded="true"] {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-pressed);
+}
+
+.ing-status[data-status="have"] {
+  color: var(--olive);
+  border-color: color-mix(in srgb, var(--olive) 50%, transparent);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7),
+    color-mix(in srgb, var(--olive) 14%, transparent) 80%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(42, 35, 32, 0.05),
+    0 1px 2px rgba(42, 35, 32, 0.1);
+}
+.ing-status[data-status="low"] {
+  color: var(--saffron);
+  border-color: color-mix(in srgb, var(--saffron) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7),
+    color-mix(in srgb, var(--saffron) 16%, transparent) 80%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(42, 35, 32, 0.05),
+    0 1px 2px rgba(42, 35, 32, 0.1);
+}
+
+.ing-menu {
+  position: absolute;
+  top: calc(100% - 2px);
+  right: 0;
+  z-index: 20;
+  min-width: 172px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 14px 34px rgba(42, 35, 32, 0.16), 0 2px 6px rgba(42, 35, 32, 0.08);
+  animation: wtc-menu-pop 0.14s ease-out both;
+}
+.ing-menu[hidden] { display: none; }
+
+.ing-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.ing-menu button::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 18%, transparent);
+}
+.ing-menu .is-have { color: var(--olive); }
+.ing-menu .is-low { color: var(--saffron); }
+.ing-menu .is-add {
+  color: var(--terracotta);
+  border-top: 1px solid var(--line);
+  margin-top: 5px;
+}
+.ing-menu .is-add::before {
+  background: none;
+  box-shadow: none;
+  content: "+";
+  font-size: 14px;
+  line-height: 1;
+  text-align: center;
+}
+.ing-menu .is-have span,
+.ing-menu .is-low span { color: var(--ink); }
+.ing-menu button:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.ing-menu button:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: -2px;
+}
+
+/* ============================================================
+   TAB: Plan (week)
+   ============================================================ */
+
+.day-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 14px 14px 15px;
+  margin-bottom: 10px;
+  box-shadow: var(--bevel-flat), var(--shadow-card);
+}
+.day-card.is-today {
+  background: var(--today-wash);
+  border-color: var(--today-wash-border);
+}
+.day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+.day-name {
+  font-family: var(--serif);
+  font-size: 21px;
+  line-height: 1;
+}
+.day-date {
+  font-size: 12px;
+  color: var(--muted-3);
+}
+.today-pill {
+  margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--today-wash-border);
+  color: var(--terracotta);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+/* A slot is a socket. Empty = dashed and open; filled = the recipe
+   seated in it, sunk, the way a chosen filter chip is held down. */
+.slot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 58px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  text-align: left;
+  transition: var(--press);
+}
+.slot-empty {
+  border: 1px dashed var(--line-dash-2);
+  background: none;
+  color: var(--muted-4);
+  font-size: 13px;
+  align-items: flex-start;
+  justify-content: center;
+  box-shadow: none;
+}
+.slot-empty:hover {
+  border-color: var(--muted-3);
+  background: color-mix(in srgb, var(--paper-sunk) 55%, transparent);
+}
+.slot-empty:active {
+  box-shadow: var(--bevel-sunk);
+}
+.slot-filled {
+  border: 1px solid var(--line-filled-slot);
+  background: var(--paper-warm);
+  box-shadow: var(--bevel-sunk);
+}
+.slot-filled:active {
+  transform: translateY(1px);
+  box-shadow: var(--bevel-sunk-deep);
+}
+.slot-label {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+}
+.slot-title {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.25;
+}
+
+/* ============================================================
+   TAB: Grocery list
+   ============================================================ */
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  transition: background-color 0.14s ease;
+}
+.check-row:active {
+  background: color-mix(in srgb, var(--paper-sunk) 70%, transparent);
+}
+
+/* Unchecked = raised, waiting to be pressed. Checked = pressed in
+   and filled — the same held-down logic as chips, tabs, slots. */
+.checkbox {
+  width: 21px;
+  height: 21px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 6px;
+  border: 1px solid var(--line-dash-2);
+  background: var(--fill-paper-lit);
+  box-shadow: var(--bevel-raised);
+  display: grid;
+  place-items: center;
+  color: transparent;
+  font-size: 12px;
+  line-height: 1;
+  transition: var(--press);
+}
+.checkbox::before { content: "✓"; }
+.check-row[aria-checked="true"] .checkbox,
+.checkbox.is-checked {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(180deg, #7b8b4a, var(--olive) 70%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 2px 4px rgba(30, 35, 12, 0.22);
+}
+
+.check-body { min-width: 0; flex: 1; }
+.check-name {
+  font-size: 15.5px;
+  color: var(--ink);
+}
+.check-source {
+  font-size: 12px;
+  color: var(--muted-2);
+  margin-top: 2px;
+}
+.check-row[aria-checked="true"] .check-name {
+  color: #a99c91;
+  text-decoration: line-through;
+}
+.check-row[aria-checked="true"] .check-source { color: var(--muted-4); }
+
+/* "RUNNING LOW" — a readout, so flat like every other status pill. */
+.low-pill {
+  margin-left: auto;
+  flex: none;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 20px;
+  color: #a5751a;
+  background: var(--tint-low);
+  box-shadow: inset 0 0 0 1px rgba(42, 35, 32, 0.05);
+}
+
+/* ---------------- Tab bar + FAB ---------------- */
+
+.tabbar-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 14px calc(26px + var(--sa-bottom));
+  background: linear-gradient(180deg, rgba(251, 247, 240, 0) 0%, var(--paper) 42%);
+  pointer-events: none;
+}
+
+/* The bar is one raised slab; the active tab is a well cut into it. */
 .tabbar {
+  display: flex;
+  align-items: stretch;
   background: linear-gradient(180deg, #fff, var(--paper-warm) 100%);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  pointer-events: auto;
   box-shadow:
     inset 0 1px 0 #fff,
     inset 0 -1px 0 rgba(42, 35, 32, 0.06),
@@ -183,34 +1253,45 @@
 }
 
 .tab {
+  flex: 1;
+  min-width: 0;
+  border: none;
   background: none;
-  color: var(--muted-2);
+  padding: 17px 2px 16px;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted-3);
   transition: var(--press);
-  position: relative;
 }
-.tab:active {
-  transform: translateY(1px);
-}
-
-/* Active tab is a sunk well inside the slab. */
+.tab:active { transform: translateY(1px); }
 .tab[aria-current="page"],
 .tab.is-active {
   color: var(--ink);
+  font-weight: 500;
   background: var(--paper-sunk);
-  box-shadow:
-    inset 0 2px 3px rgba(42, 35, 32, 0.08),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: var(--bevel-sunk-deep);
 }
 
-/* ---------------- FAB ---------------- */
-
 .fab {
+  position: absolute;
+  right: 20px;
+  bottom: calc(84px + var(--sa-bottom));
+  border: none;
   background: linear-gradient(180deg, #cd6f4c 0%, var(--terracotta) 60%, #b1553a 100%);
+  color: #fff;
+  border-radius: 26px;
+  padding: 15px 20px;
+  font-size: 14.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  pointer-events: auto;
+  transition: var(--press);
   box-shadow:
     inset 0 1.5px 0 rgba(255, 255, 255, 0.34),
     inset 0 -2px 3px rgba(90, 35, 18, 0.28),
     var(--shadow-fab);
-  transition: var(--press);
 }
 .fab:active {
   transform: translateY(2px);
@@ -219,50 +1300,66 @@
     0 4px 12px -6px rgba(150, 70, 40, 0.5);
 }
 
-/* ---------------- Cards, list rows ---------------- */
+/* ---------------- Toast ---------------- */
 
-/* Cards stay paper documents, not buttons: one hairline top
-   highlight only, so they sit ON the page rather than above it. */
-.card,
-.list-container {
+.toast {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: calc(108px + var(--sa-bottom));
+  background: var(--fill-ink);
+  color: var(--paper);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 14px;
+  z-index: 60;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    var(--shadow-card);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    var(--shadow-toast);
 }
 
-/* A whole row that is tappable gets the press feedback, no bevel —
-   the row is the target, the nub inside it is the control. */
-.row-button {
-  transition: background-color 0.14s ease;
-  border-radius: 12px;
-}
-.row-button:active {
-  background: color-mix(in srgb, var(--paper-sunk) 70%, transparent);
-}
+/* ---------------- Overlays ---------------- */
 
-/* ---------------- Status pills stay flat ---------------- */
-
-/* Deliberate: have/low/out are readouts, not controls. Flat tint
-   + hairline ring keeps the raised treatment meaningful. */
-.status-pill {
-  box-shadow: inset 0 0 0 1px rgba(42, 35, 32, 0.05);
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim-sheet);
+  display: flex;
+  align-items: flex-end;
+  z-index: 50;
 }
 
-/* ---------------- Sheets, dialogs, toast ---------------- */
+.scrim-center {
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim-dialog);
+  padding: 0 28px;
+}
 
-.sheet,
-.modal {
+.sheet {
+  width: 100%;
+  background: var(--paper);
+  border-radius: 26px 26px 0 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: var(--sa-bottom);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 -18px 40px -12px rgba(42, 35, 32, 0.28);
 }
-.dialog {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 24px 50px -16px rgba(42, 35, 32, 0.4);
-}
 
-/* Sheet grab handle — small physical affordance at the top edge. */
+/* Grab handle — the sheet's one physical affordance. */
+.sheet-head {
+  position: relative;
+  padding: 22px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
 .sheet-head::before {
   content: "";
   position: absolute;
@@ -275,9 +1372,75 @@
   background: var(--line-dash);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
-.sheet-head {
-  position: relative;
-  padding-top: 22px;
+
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 20px;
+  scrollbar-width: none;
+}
+
+.sheet-foot {
+  padding: 12px 20px 18px;
+  border-top: 1px solid var(--line);
+  flex: none;
+}
+
+.dialog {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 22px 20px 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 24px 50px -16px rgba(42, 35, 32, 0.4);
+}
+
+.modal {
+  width: 100%;
+  max-height: 82vh;
+  background: var(--paper);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 24px 50px -16px rgba(42, 35, 32, 0.4);
+}
+
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  scrollbar-width: none;
+}
+
+/* ---------------- Shelby surfaces ---------------- */
+
+.shelby-card {
+  background: var(--shelby-wash);
+  border: 1px solid var(--shelby-wash-border);
+  border-radius: 22px;
+  padding: 16px 18px 18px;
+  box-shadow: var(--bevel-flat), var(--shadow-card);
+}
+.sequence-card {
+  background: var(--sequence-wash);
+  border: 1px solid var(--sequence-wash-border);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: var(--bevel-flat), var(--shadow-card);
+}
+.shelby-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  flex: none;
 }
 
 /* ---------------- Dark degradation ---------------- */
@@ -294,13 +1457,21 @@
     --muted: #a2988c;
     --muted-2: #93887c;
     --muted-3: #7d7368;
+    --muted-4: #6d6358;
     --line: #3a332c;
+    --line-soft: #302a24;
     --line-dash: #4a4239;
     --line-dash-2: #453d34;
+    --line-filled-slot: #453d34;
     --terracotta: #e08a62;
     --terracotta-dark: #f0a37f;
     --olive: #9baa64;
     --saffron: #e7b95c;
+    --tint-have: #2a2c1e;
+    --tint-low: #332a17;
+    --tint-out: #331f16;
+    --today-wash: #241d18;
+    --today-wash-border: #3f342a;
 
     --bevel-raised:
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
@@ -308,22 +1479,27 @@
       0 1px 2px rgba(0, 0, 0, 0.45);
     --bevel-pressed: inset 0 2px 5px rgba(0, 0, 0, 0.5);
     --bevel-sunk: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+    --bevel-sunk-deep: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    --bevel-flat: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     --fill-paper-lit: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.12));
+    --fill-ink: linear-gradient(180deg, #efe7dc, #ddd2c4);
   }
 
   .tabbar {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.14));
   }
   .card,
-  .list-container {
+  .list-container,
+  .day-card,
+  .recipe-card {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.4);
   }
   .btn-primary,
-  .fab {
-    color: #21150f;
-  }
-  .btn-dark {
-    background: linear-gradient(180deg, #efe7dc, #ddd2c4);
-    color: #1b1815;
-  }
+  .fab { color: #21150f; }
+  .btn-dark,
+  .pill-dark,
+  .badge-ai,
+  .chip-rail button.is-active,
+  .chip-rail button[aria-pressed="true"] { color: #1b1815; }
+  .toast { color: #1b1815; }
 }

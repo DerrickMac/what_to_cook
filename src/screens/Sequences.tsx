@@ -44,7 +44,7 @@ export function Sequences() {
               .concat(s.extras || []);
 
             return (
-              <article key={s.id} className="card" style={{ padding: 18 }}>
+              <article key={s.id} className="sequence-card">
                 <div
                   style={{
                     display: 'flex',

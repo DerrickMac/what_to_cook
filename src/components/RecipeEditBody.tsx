@@ -122,29 +122,14 @@ export function RecipeEditBody({ draft }: { draft: Recipe }) {
       {/* Tags */}
       <div
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 6,
-          alignItems: 'center',
-          border: '1px solid var(--line)',
-          borderRadius: 12,
-          background: 'var(--surface)',
-          padding: '8px 10px',
           marginBottom: 20,
         }}
+        className="tag-box"
       >
         {draft.tags.map((t) => (
-          <span
-            key={t}
-            className="tag-chip"
-            style={{ fontSize: 12, padding: '4px 6px 4px 9px', display: 'inline-flex', gap: 5 }}
-          >
+          <span key={t} className="tag-chip tag-chip-removable">
             {t}
-            <button
-              onClick={() => removeEditTag(t)}
-              aria-label={`Remove ${t}`}
-              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--muted-2)' }}
-            >
+            <button onClick={() => removeEditTag(t)} aria-label={`Remove ${t}`}>
               ×
             </button>
           </span>
@@ -160,7 +145,6 @@ export function RecipeEditBody({ draft }: { draft: Recipe }) {
           }}
           placeholder="tag + enter"
           aria-label="Add a tag"
-          style={{ flex: 1, minWidth: 90, border: 'none', outline: 'none', background: 'transparent', fontSize: 13 }}
         />
       </div>
 

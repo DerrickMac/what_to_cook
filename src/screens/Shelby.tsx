@@ -71,8 +71,8 @@ function Menu() {
         {CARDS.map((c) => (
           <button
             key={c.view}
-            className="card"
-            style={{ padding: 18, textAlign: 'left', display: 'block' }}
+            className="shelby-card"
+            style={{ width: '100%', textAlign: 'left', display: 'block' }}
             onClick={() => shelbyGo(c.view)}
           >
             <div className="serif" style={{ fontSize: 20, color: 'var(--ink)', marginBottom: 5 }}>

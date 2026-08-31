@@ -113,7 +113,7 @@ export function Recipes() {
             : `Nothing under “${state.query}”. Shelby could invent something instead.`}
         </p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="recipe-grid">
           {shown.map((r) => {
             const need = matches.get(r.id)?.need ?? 0;
             return (
