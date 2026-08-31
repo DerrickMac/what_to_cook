@@ -19,11 +19,20 @@ export function PantryItem() {
   const [cat, setCat] = useState<string>(item?.cat ?? aisleNames[0] ?? 'Pantry');
   const [status, setStatus] = useState<Status>(item?.status ?? 'out');
   const [allIng, setAllIng] = useState<{ id: string; name: string }[]>([]);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api.listIngredients().then(setAllIng).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!photoOpen) return;
+    const close = () => setPhotoOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [photoOpen]);
 
   // Nothing selected — bounce home.
   if (!editing) {
@@ -77,11 +86,57 @@ export function PantryItem() {
       </header>
 
       {item?.imageUrl && (
-        <img
-          src={item.imageUrl}
-          alt=""
-          style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 16, marginBottom: 18 }}
-        />
+        <button
+          type="button"
+          onClick={() => setPhotoOpen(true)}
+          aria-label={`View full-size photo of ${item.name}`}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: 0,
+            border: 'none',
+            background: 'none',
+            cursor: 'zoom-in',
+            marginBottom: 18,
+          }}
+        >
+          <img
+            src={item.imageUrl}
+            alt=""
+            style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 16, display: 'block' }}
+          />
+        </button>
+      )}
+
+      {photoOpen && item?.imageUrl && (
+        <div
+          className="scrim scrim-center rise-fast"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${item.name} photo`}
+          onClick={() => setPhotoOpen(false)}
+        >
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '92vw',
+              maxHeight: '88vh',
+              objectFit: 'contain',
+              borderRadius: 12,
+              boxShadow: 'var(--shadow-toast)',
+            }}
+          />
+          <button
+            className="icon-round"
+            onClick={() => setPhotoOpen(false)}
+            aria-label="Close"
+            style={{ position: 'fixed', top: 'calc(16px + var(--sa-top))', right: 16 }}
+          >
+            ×
+          </button>
+        </div>
       )}
 
       <div className="eyebrow" style={{ marginBottom: 6 }}>
