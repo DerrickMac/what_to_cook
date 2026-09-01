@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { CardWell } from '../components/CircleMark';
-import { filterRecipes, tagCounts, groupTagCounts, pantryMatch, pantryHaves } from '../lib/derive';
+import {
+  filterRecipes,
+  tagCounts,
+  buildTagTree,
+  descendantsOf,
+  pantryMatch,
+  pantryHaves,
+} from '../lib/derive';
 
 const PANTRY_CHIPS = [
   { key: 'off', label: 'All recipes' },
@@ -11,18 +18,20 @@ const PANTRY_CHIPS = [
 
 export function Recipes() {
   const { state, setState, openDetail, newRecipe } = useStore();
-  const [expandedTag, setExpandedTag] = useState<string | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
-  // tag chips: All first, then alphabetical. Tiered tags (e.g. every
-  // "*beef*" tag) collapse under their root until it's expanded.
+  // Tag rail, three tiers deep: category (Protein, Vegetables, …) →
+  // group (beef, chicken, …) → specific cut (beef ribs, …). Anything
+  // not filed in TAG_TAXONOMY stays a normal flat chip.
   const allTagCounts = tagCounts(state.recipes);
-  const { top: topTagCounts, childrenOf } = groupTagCounts(allTagCounts);
-  const tags = [...topTagCounts].sort((a, b) => a.tag.localeCompare(b.tag));
-  const chips = [{ tag: null as string | null, count: state.recipes.length }, ...tags];
+  const { categories, top } = buildTagTree(allTagCounts);
+  const tags = [...top].sort((a, b) => a.tag.localeCompare(b.tag));
 
-  const activeChildren = state.activeTag
-    ? (childrenOf[state.activeTag] ?? []).map((c) => c.tag)
-    : [];
+  const activeCategory = categories.find((c) => c.label === expandedCategory);
+  const activeGroup = activeCategory?.groups.find((g) => g.tag === expandedGroup);
+
+  const activeChildren = state.activeTag ? descendantsOf(state.activeTag, categories) : [];
   const { list, note } = filterRecipes(state.recipes, state.query, state.activeTag, activeChildren);
 
   // pantry match, computed once for the visible list
@@ -93,45 +102,108 @@ export function Recipes() {
           : note}
       </div>
 
+      {/* Tier 1: All, categories, and any ungrouped tag */}
       <div className="chip-rail" style={{ margin: '4px -20px 0', padding: '0 20px' }}>
-        {chips.map((c) => {
-          const on = state.activeTag === c.tag;
-          const kids = c.tag ? childrenOf[c.tag] : undefined;
-          const open = !!c.tag && expandedTag === c.tag;
+        <button
+          onClick={() => {
+            setState({ activeTag: null });
+            setExpandedCategory(null);
+            setExpandedGroup(null);
+          }}
+          style={{
+            border: `1px solid ${!state.activeTag ? 'var(--ink)' : 'var(--line)'}`,
+            background: !state.activeTag ? 'var(--ink)' : 'var(--surface)',
+            color: !state.activeTag ? 'var(--paper)' : 'var(--muted)',
+          }}
+        >
+          All {state.recipes.length}
+        </button>
+        {categories.map((cat) => {
+          const on = state.activeTag === cat.label;
+          const open = expandedCategory === cat.label;
           return (
             <button
-              key={c.tag ?? '__all'}
+              key={cat.label}
               onClick={() => {
-                setState({ activeTag: c.tag });
-                setExpandedTag(kids ? (open ? null : c.tag) : null);
+                setState({ activeTag: cat.label });
+                setExpandedCategory(open ? null : cat.label);
+                setExpandedGroup(null);
               }}
-              aria-expanded={kids ? open : undefined}
+              aria-expanded={open}
               style={{
                 border: `1px solid ${on ? 'var(--ink)' : 'var(--line)'}`,
                 background: on ? 'var(--ink)' : 'var(--surface)',
                 color: on ? 'var(--paper)' : 'var(--muted)',
               }}
             >
-              {c.tag
-                ? `${c.tag} · ${c.count + (kids?.reduce((s, k) => s + k.count, 0) ?? 0)}`
-                : `All ${c.count}`}
-              {kids ? (open ? ' ▴' : ' ▾') : ''}
+              {cat.label} · {cat.total}
+              {open ? ' ▴' : ' ▾'}
+            </button>
+          );
+        })}
+        {tags.map((c) => {
+          const on = state.activeTag === c.tag;
+          return (
+            <button
+              key={c.tag}
+              onClick={() => {
+                setState({ activeTag: c.tag });
+                setExpandedCategory(null);
+                setExpandedGroup(null);
+              }}
+              style={{
+                border: `1px solid ${on ? 'var(--ink)' : 'var(--line)'}`,
+                background: on ? 'var(--ink)' : 'var(--surface)',
+                color: on ? 'var(--paper)' : 'var(--muted)',
+              }}
+            >
+              {c.tag} · {c.count}
             </button>
           );
         })}
       </div>
 
-      {expandedTag && childrenOf[expandedTag] && (
+      {/* Tier 2: groups within the expanded category */}
+      {activeCategory && (
+        <div className="chip-rail" style={{ margin: '6px -20px 0', padding: '0 20px' }}>
+          {activeCategory.groups.map((g) => {
+            const on = state.activeTag === g.tag;
+            const open = expandedGroup === g.tag;
+            const hasKids = g.children.length > 0;
+            return (
+              <button
+                key={g.tag}
+                onClick={() => {
+                  setState({ activeTag: g.tag });
+                  setExpandedGroup(hasKids ? (open ? null : g.tag) : null);
+                }}
+                aria-expanded={hasKids ? open : undefined}
+                style={{
+                  border: `1px solid ${on ? 'var(--terracotta)' : 'var(--line)'}`,
+                  background: on ? 'var(--terracotta)' : 'var(--surface)',
+                  color: on ? '#fff' : 'var(--muted)',
+                }}
+              >
+                {g.tag} · {g.total}
+                {hasKids ? (open ? ' ▴' : ' ▾') : ''}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Tier 3: specific cuts/variants within the expanded group */}
+      {activeGroup && (
         <div className="chip-rail" style={{ margin: '6px -20px 16px', padding: '0 20px' }}>
-          {childrenOf[expandedTag].map((c) => {
+          {activeGroup.children.map((c) => {
             const on = state.activeTag === c.tag;
             return (
               <button
                 key={c.tag}
                 onClick={() => setState({ activeTag: c.tag })}
                 style={{
-                  border: `1px solid ${on ? 'var(--terracotta)' : 'var(--line)'}`,
-                  background: on ? 'var(--terracotta)' : 'var(--surface)',
+                  border: `1px solid ${on ? 'var(--olive)' : 'var(--line)'}`,
+                  background: on ? 'var(--olive)' : 'var(--surface)',
                   color: on ? '#fff' : 'var(--muted)',
                 }}
               >
@@ -141,7 +213,7 @@ export function Recipes() {
           })}
         </div>
       )}
-      {!expandedTag && <div style={{ marginBottom: 16 }} />}
+      {!activeGroup && <div style={{ marginBottom: 16 }} />}
 
       {shown.length === 0 ? (
         <p
