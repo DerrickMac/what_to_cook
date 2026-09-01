@@ -187,34 +187,150 @@ export function tagCounts(recipes: Recipe[]) {
 
 export type TagCount = { tag: string; count: number };
 
-/**
- * Tags that other tags nest under, e.g. "beef ribs" and "ground beef"
- * become children of "beef" and drop off the top-level rail until
- * "beef" is expanded. A tag qualifies as a child of a root the same
- * way for every root: it contains the root tag as a substring and
- * isn't the root itself. Add a word here to tier another category —
- * no other code needs to change.
- */
-const TAG_GROUP_ROOTS = ['beef', 'chicken', 'pork', 'eggs'];
+type TaxonomyGroup = { tag: string; children: string[] };
+type TaxonomyCategory = { label: string; ownTag?: string; groups: TaxonomyGroup[] };
+
+const leaves = (tags: string[]): TaxonomyGroup[] => tags.map((tag) => ({ tag, children: [] }));
 
 /**
- * Splits tag counts into the top-level rail (roots + anything
- * ungrouped) and each root's children, keyed by root tag.
+ * Hand-curated 3-tier tag taxonomy: category → group → specific
+ * cut/variant. Every literal tag a recipe can carry should be placed
+ * here exactly once, at whichever tier fits it best. A tag that
+ * isn't listed here at all (new tags added later included) just
+ * stays a normal flat chip on the top-level rail — nothing silently
+ * disappears, it just isn't filed under a category yet.
  */
-export function groupTagCounts(counts: TagCount[]) {
-  const childrenOf: Record<string, TagCount[]> = {};
+export const TAG_TAXONOMY: TaxonomyCategory[] = [
+  {
+    label: 'Protein',
+    ownTag: 'protein',
+    groups: [
+      { tag: 'beef', children: ['beef ribs', 'cubed beef', 'ground beef', 'thinly sliced beef'] },
+      { tag: 'chicken', children: ['chicken breasts/thighs', 'chicken wings'] },
+      { tag: 'pork', children: ['ground pork', 'pork belly', 'pork shoulder/butt', 'spare ribs'] },
+      ...leaves([
+        'eggs',
+        'razor clams',
+        'salmon',
+        'shrimp',
+        'spam',
+        'tofu',
+        'tuna (canned)',
+        'cha lua',
+        'oxtail',
+        'steak',
+      ]),
+    ],
+  },
+  {
+    label: 'Vegetables',
+    ownTag: 'vegetable',
+    groups: leaves([
+      'asparagus',
+      'avocados',
+      'beans',
+      'bok choy',
+      'brussels sprouts',
+      'carrots',
+      'cauliflower',
+      'corn',
+      'cucumbers',
+      'daikon/korean radish',
+      'green beans',
+      'mung bean sprouts',
+      'mushrooms',
+      'potatoes',
+      'romaine lettuce',
+      'spinach',
+      'squash',
+    ]),
+  },
+  {
+    label: 'Carbohydrates',
+    ownTag: 'carbohydrate',
+    groups: leaves(['bread', 'fried rice', 'noodles', 'pancakes/fritters', 'rice']),
+  },
+  {
+    label: 'Sauces & Dips',
+    ownTag: 'sauce & dip',
+    groups: leaves(['chicken wing sauces', 'cooking sauces', 'dips and salsas', 'salad dressings']),
+  },
+  { label: 'Soups', ownTag: 'soup', groups: [] },
+  { label: 'Dessert', ownTag: 'dessert', groups: leaves(['cookies', 'sweeteners']) },
+  {
+    label: 'Cocktails',
+    ownTag: 'cocktail',
+    groups: leaves(['kahlua', 'rum', 'vodka', 'whiskey', 'wine']),
+  },
+];
+
+function countOf(tag: string, counts: TagCount[]): number {
+  return counts.find((c) => c.tag === tag)?.count ?? 0;
+}
+
+export type BuiltTagGroup = { tag: string; count: number; children: TagCount[]; total: number };
+export type BuiltTagCategory = {
+  label: string;
+  ownTag?: string;
+  ownCount: number;
+  groups: BuiltTagGroup[];
+  total: number;
+};
+
+/**
+ * Applies TAG_TAXONOMY to this household's actual tag counts: drops
+ * anything with zero recipes, and returns whatever's left as a
+ * top-level flat rail (`top`) plus the populated category tree.
+ */
+export function buildTagTree(counts: TagCount[]) {
   const claimed = new Set<string>();
-  const byTag = new Set(counts.map((c) => c.tag));
 
-  for (const root of TAG_GROUP_ROOTS) {
-    if (!byTag.has(root)) continue;
-    const kids = counts.filter((c) => c.tag !== root && c.tag.includes(root));
-    if (kids.length === 0) continue;
-    childrenOf[root] = kids;
-    kids.forEach((k) => claimed.add(k.tag));
+  const categories: BuiltTagCategory[] = TAG_TAXONOMY.map((cat) => {
+    const groups: BuiltTagGroup[] = cat.groups
+      .map((g) => {
+        const children = g.children
+          .map((tag) => ({ tag, count: countOf(tag, counts) }))
+          .filter((c) => c.count > 0);
+        children.forEach((c) => claimed.add(c.tag));
+        const ownCount = countOf(g.tag, counts);
+        if (ownCount > 0 || children.length > 0) claimed.add(g.tag);
+        return { tag: g.tag, count: ownCount, children, total: ownCount + children.reduce((s, c) => s + c.count, 0) };
+      })
+      .filter((g) => g.total > 0);
+
+    const ownCount = cat.ownTag ? countOf(cat.ownTag, counts) : 0;
+    if (cat.ownTag && ownCount > 0) claimed.add(cat.ownTag);
+    return {
+      label: cat.label,
+      ownTag: cat.ownTag,
+      ownCount,
+      groups,
+      total: ownCount + groups.reduce((s, g) => s + g.total, 0),
+    };
+  }).filter((cat) => cat.total > 0);
+
+  return { categories, top: counts.filter((c) => !claimed.has(c.tag)) };
+}
+
+/**
+ * Every literal tag that should be matched when `selector` (a
+ * category label, a group tag, or a leaf tag) is the active filter —
+ * itself plus every tag nested under it.
+ */
+export function descendantsOf(selector: string, categories: BuiltTagCategory[]): string[] {
+  for (const cat of categories) {
+    if (cat.label === selector) {
+      const out = cat.ownTag ? [cat.ownTag] : [];
+      cat.groups.forEach((g) => {
+        out.push(g.tag, ...g.children.map((c) => c.tag));
+      });
+      return out;
+    }
+    for (const g of cat.groups) {
+      if (g.tag === selector) return g.children.map((c) => c.tag);
+    }
   }
-
-  return { top: counts.filter((c) => !claimed.has(c.tag)), childrenOf };
+  return [];
 }
 
 /* ---------------- Search ---------------- */
