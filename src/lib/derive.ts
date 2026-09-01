@@ -185,6 +185,38 @@ export function tagCounts(recipes: Recipe[]) {
     .map((tag) => ({ tag, count: m[tag] }));
 }
 
+export type TagCount = { tag: string; count: number };
+
+/**
+ * Tags that other tags nest under, e.g. "beef ribs" and "ground beef"
+ * become children of "beef" and drop off the top-level rail until
+ * "beef" is expanded. A tag qualifies as a child of a root the same
+ * way for every root: it contains the root tag as a substring and
+ * isn't the root itself. Add a word here to tier another category —
+ * no other code needs to change.
+ */
+const TAG_GROUP_ROOTS = ['beef', 'chicken', 'pork', 'eggs'];
+
+/**
+ * Splits tag counts into the top-level rail (roots + anything
+ * ungrouped) and each root's children, keyed by root tag.
+ */
+export function groupTagCounts(counts: TagCount[]) {
+  const childrenOf: Record<string, TagCount[]> = {};
+  const claimed = new Set<string>();
+  const byTag = new Set(counts.map((c) => c.tag));
+
+  for (const root of TAG_GROUP_ROOTS) {
+    if (!byTag.has(root)) continue;
+    const kids = counts.filter((c) => c.tag !== root && c.tag.includes(root));
+    if (kids.length === 0) continue;
+    childrenOf[root] = kids;
+    kids.forEach((k) => claimed.add(k.tag));
+  }
+
+  return { top: counts.filter((c) => !claimed.has(c.tag)), childrenOf };
+}
+
 /* ---------------- Search ---------------- */
 
 /**
@@ -192,13 +224,20 @@ export function tagCounts(recipes: Recipe[]) {
  * and *only if no tag matches* fall back to titles and ingredient names.
  * Favourites sort to the front regardless of filter.
  */
-export function filterRecipes(recipes: Recipe[], query: string, activeTag: string | null) {
+export function filterRecipes(
+  recipes: Recipe[],
+  query: string,
+  activeTag: string | null,
+  /** When activeTag is a tiered root (e.g. "beef"), also match these child tags. */
+  activeTagChildren: string[] = []
+) {
   const q = query.trim().toLowerCase();
   let list = recipes.slice();
   let note = '';
 
   if (activeTag) {
-    list = list.filter((r) => r.tags.includes(activeTag));
+    const wanted = [activeTag, ...activeTagChildren];
+    list = list.filter((r) => r.tags.some((t) => wanted.includes(t)));
     note = 'Tag · ' + activeTag;
   }
 
