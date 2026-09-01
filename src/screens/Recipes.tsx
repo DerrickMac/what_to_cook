@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useStore } from '../store';
 import { CardWell } from '../components/CircleMark';
-import { filterRecipes, tagCounts, pantryMatch, pantryHaves } from '../lib/derive';
+import { filterRecipes, tagCounts, groupTagCounts, pantryMatch, pantryHaves } from '../lib/derive';
 
 const PANTRY_CHIPS = [
   { key: 'off', label: 'All recipes' },
@@ -10,7 +11,19 @@ const PANTRY_CHIPS = [
 
 export function Recipes() {
   const { state, setState, openDetail, newRecipe } = useStore();
-  const { list, note } = filterRecipes(state.recipes, state.query, state.activeTag);
+  const [expandedTag, setExpandedTag] = useState<string | null>(null);
+
+  // tag chips: All first, then alphabetical. Tiered tags (e.g. every
+  // "*beef*" tag) collapse under their root until it's expanded.
+  const allTagCounts = tagCounts(state.recipes);
+  const { top: topTagCounts, childrenOf } = groupTagCounts(allTagCounts);
+  const tags = [...topTagCounts].sort((a, b) => a.tag.localeCompare(b.tag));
+  const chips = [{ tag: null as string | null, count: state.recipes.length }, ...tags];
+
+  const activeChildren = state.activeTag
+    ? (childrenOf[state.activeTag] ?? []).map((c) => c.tag)
+    : [];
+  const { list, note } = filterRecipes(state.recipes, state.query, state.activeTag, activeChildren);
 
   // pantry match, computed once for the visible list
   const haves = pantryHaves(state.pantry);
@@ -22,10 +35,6 @@ export function Recipes() {
           const need = matches.get(r.id)!.need;
           return state.pantryFilter === 'ready' ? need === 0 : need <= 2;
         });
-
-  // tag chips: All first, then alphabetical
-  const tags = [...tagCounts(state.recipes)].sort((a, b) => a.tag.localeCompare(b.tag));
-  const chips = [{ tag: null as string | null, count: state.recipes.length }, ...tags];
 
   return (
     <div className="screen rise">
@@ -84,24 +93,55 @@ export function Recipes() {
           : note}
       </div>
 
-      <div className="chip-rail" style={{ margin: '4px -20px 16px', padding: '0 20px' }}>
+      <div className="chip-rail" style={{ margin: '4px -20px 0', padding: '0 20px' }}>
         {chips.map((c) => {
           const on = state.activeTag === c.tag;
+          const kids = c.tag ? childrenOf[c.tag] : undefined;
+          const open = !!c.tag && expandedTag === c.tag;
           return (
             <button
               key={c.tag ?? '__all'}
-              onClick={() => setState({ activeTag: c.tag })}
+              onClick={() => {
+                setState({ activeTag: c.tag });
+                setExpandedTag(kids ? (open ? null : c.tag) : null);
+              }}
+              aria-expanded={kids ? open : undefined}
               style={{
                 border: `1px solid ${on ? 'var(--ink)' : 'var(--line)'}`,
                 background: on ? 'var(--ink)' : 'var(--surface)',
                 color: on ? 'var(--paper)' : 'var(--muted)',
               }}
             >
-              {c.tag ? `${c.tag} · ${c.count}` : `All ${c.count}`}
+              {c.tag
+                ? `${c.tag} · ${c.count + (kids?.reduce((s, k) => s + k.count, 0) ?? 0)}`
+                : `All ${c.count}`}
+              {kids ? (open ? ' ▴' : ' ▾') : ''}
             </button>
           );
         })}
       </div>
+
+      {expandedTag && childrenOf[expandedTag] && (
+        <div className="chip-rail" style={{ margin: '6px -20px 16px', padding: '0 20px' }}>
+          {childrenOf[expandedTag].map((c) => {
+            const on = state.activeTag === c.tag;
+            return (
+              <button
+                key={c.tag}
+                onClick={() => setState({ activeTag: c.tag })}
+                style={{
+                  border: `1px solid ${on ? 'var(--terracotta)' : 'var(--line)'}`,
+                  background: on ? 'var(--terracotta)' : 'var(--surface)',
+                  color: on ? '#fff' : 'var(--muted)',
+                }}
+              >
+                {c.tag} · {c.count}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {!expandedTag && <div style={{ marginBottom: 16 }} />}
 
       {shown.length === 0 ? (
         <p
